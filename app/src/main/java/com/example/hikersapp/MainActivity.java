@@ -59,7 +59,69 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (requestCode == 1) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15, 5, locationListener);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    if (location != null) {
+
+                        LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
+                        mmap.clear();
+                        mmap.addMarker(new MarkerOptions().position(mylocation).title("your location"));
+                        mmap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+
+
+                        altitude.setText("Altitude : " + location.getAltitude());
+                        latitude.setText("Latitude : " + location.getLatitude());
+                        longitude.setText("Longitude : " + location.getLongitude());
+
+                        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                        String city="";
+                        try {
+                            List<Address> listaddress = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                            String finaladdress = "Could not find the address";
+                            if (listaddress != null && listaddress.size() > 0) {
+                                finaladdress = "";
+
+                                if (listaddress.get(0).getSubThoroughfare() != null) {
+                                    finaladdress += listaddress.get(0).getSubThoroughfare() + ", ";
+                                }
+                                if (listaddress.get(0).getThoroughfare() != null) {
+                                    finaladdress += listaddress.get(0).getThoroughfare() + "\n ";
+                                }
+                                if (listaddress.get(0).getLocality() != null) {
+                                    finaladdress += listaddress.get(0).getLocality() + "\n ";
+                                    city += listaddress.get(0).getLocality() + ", ";
+                                }
+                                if (listaddress.get(0).getPostalCode() != null) {
+                                    finaladdress += listaddress.get(0).getPostalCode() + "\n ";
+                                }
+                                if (listaddress.get(0).getSubAdminArea() != null) {
+                                    finaladdress += listaddress.get(0).getSubAdminArea() + ", ";
+                                    city += listaddress.get(0).getSubAdminArea() + ", ";
+                                }
+                                if (listaddress.get(0).getAdminArea() != null) {
+                                    finaladdress += listaddress.get(0).getAdminArea() + "\n ";
+                                    city+=listaddress.get(0).getAdminArea()+", ";
+                                }
+                                if (listaddress.get(0).getCountryName() != null) {
+                                    finaladdress += listaddress.get(0).getCountryName();
+                                    city += listaddress.get(0).getCountryName();
+                                }
+
+                            }
+                            address.setText("Address : " + finaladdress);
+
+                        } catch (IOException e) {
+
+                            e.printStackTrace();
+                        }
+
+                        String lat = String.valueOf(location.getLatitude());
+                        String lon = String.valueOf(location.getLongitude());
+                        String api="https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid=f01d88ec3fb24ea6c9f39365387d4e1b";
+                        downlaod task=new downlaod();
+                        task.execute(api);
+
+                    }
                 }
             }
         }
